@@ -1,1 +1,1 @@
-# vasp_tools
+Repository for uploading useful python scripts for VASP.
