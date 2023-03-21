@@ -12,3 +12,12 @@ def atoms_description(atoms, print_flag=False):
         plot_atoms(atoms, ax[2], radii=0.3)
         plt.show()
     return None
+
+def center_atoms(atoms):
+    cell = atoms.cell
+    cell_center = np.sum(cell, axis = 0)/2
+    
+    geom_center = np.mean(atoms.positions, axis = 0)
+    
+    atoms.positions = atoms.positions - geom_center + cell_center
+    return atoms
