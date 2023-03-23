@@ -38,8 +38,9 @@ def parse_from_CID(cid):
     return Atoms(elements, positions=positions)
 
 def atom_sites(atoms):
-    '''Automatically obtain the atom sites in the correct format for the AFM simulation 
+    '''Automatically obtain the atom and bond sites in the correct format for the AFM simulation 
         input file'''
+    # Obtain atom sites
     atoms_dict = parse_formula(str(atoms.symbols))
     atom_list = list()
     for symbol, count in atoms_dict.items():
@@ -47,7 +48,20 @@ def atom_sites(atoms):
             atom_list.append(symbol + str(i))
    
     positions = [list(atom.position) for atom in iodo_phenil]
+    atom_pos_dict = dict(zip(atom_list, positions))
     
+    # Obtain bond sites
+    nb_list = build_neighbor_list(atoms)
+    connectivity_m = nb_list.get_connectivity_matrix()
+    connectivity_m.setdiag(0)
+    
+    bond_dict = dict()
+    for (index_1, index_2), _ in connectivity_m.items():
+        bond_name = str(atom_list[index_1])+'-' + str(atom_list[index_2])
+        bond_dict[bond_name] = list((iodo_phenil[index_1].position + iodo_phenil[index_1].position)/2)
+        
     for symbol, position in atom_pos_dict.items():
         print(symbol, *position)
+    for bond_name, position in bond_dict.items():
+        print(bond_name, *position)
     return None
