@@ -1,4 +1,6 @@
 def atoms_description(atoms, print_flag=False):
+    '''Describes both atom types, coordinates and cell.
+    If print_flag = True, plots the sample from different perspectives.'''
     print('*Printing atomic positions:*')
     for atom in atoms:
         print(f'{atom}')
@@ -14,6 +16,7 @@ def atoms_description(atoms, print_flag=False):
     return None
 
 def center_atoms(atoms):
+    '''Translates the geometrical center of the molecule to the center of the cell'''
     cell = atoms.cell
     cell_center = np.sum(cell, axis = 0)/2
     
