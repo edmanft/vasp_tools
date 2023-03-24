@@ -12,7 +12,7 @@ from ase import Atoms
 import pubchempy as pcp
 
 def parse_pubchem_json(path):
-    """Helper function for parsing the Pubchem JSON of the molecule to
+    """Helper function for parsing the Pubchem Conformer JSON of the molecule to
         an Atoms object from ase """
     with open(path) as f:
         conformer_json = json.load(f)
@@ -27,7 +27,8 @@ def parse_pubchem_json(path):
 
 
 def parse_from_CID(cid):
-    # Download the compound data
+    """Helper function for accesing the Pubchem API to obtain the Conformer JSON and parse to
+        an Atoms object from ase """
     conformer_json = pcp.get_json(cid, record_type='3d')
     elements = np.asarray(conformer_json['PC_Compounds'][0]['atoms']['element'])
     positions = np.zeros([len(elements), 3])
