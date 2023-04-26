@@ -66,3 +66,14 @@ def atom_sites(atoms):
     for bond_name, position in bond_dict.items():
         print(bond_name, *position)
     return None
+
+class Sites():
+    def __init__(self, names, positions, numbers):
+        self.names = names
+        self.positions = positions
+        self.numbers = numbers
+        self.colors = jmol_colors[self.numbers]
+        
+    def describe_sites(self):
+        for names, position in zip(self.names, self.positions):
+            print(names,'  ' , *position)
