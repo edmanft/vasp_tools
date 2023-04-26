@@ -24,3 +24,25 @@ def center_atoms(atoms):
     
     atoms.positions = atoms.positions - geom_center + cell_center
     return atoms
+
+
+def parse_formula(formula):
+    # Regular expression to match element symbols and counts
+    pattern = r'([A-Z][a-z]*)(\d*)'
+
+    # Use re.findall to get all matches in the formula
+    matches = re.findall(pattern, formula)
+
+    # Create a dictionary to store the element symbols and counts
+    counts = {}
+    for symbol, count in matches:
+        if count == '':
+            count = 1
+        else:
+            count = int(count)
+        if symbol in counts:
+            counts[symbol] += count
+        else:
+            counts[symbol] = count
+
+    return counts
