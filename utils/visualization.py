@@ -15,14 +15,19 @@ def atoms_description(atoms, print_flag=False):
         plt.show()
     return None
 
-def center_atoms(atoms):
-    '''Translates the geometrical center of the molecule to the center of the cell'''
+def center_atoms(atoms, final_height=None):
+    '''Translates the geometrical center of the molecule to the center of the cell.'
+    final_height: final height of the plane containing the molecule (mean z position).'''
     cell = atoms.cell
     cell_center = np.sum(cell, axis = 0)/2
     
     geom_center = np.mean(atoms.positions, axis = 0)
     
     atoms.positions = atoms.positions - geom_center + cell_center
+    
+    if final_height is not None:
+        min_height = np.min(atoms.positions[:,2])
+        atoms.positions[:,2] = atoms.positions[:,2] - min_height + final_height
     return atoms
 
 
