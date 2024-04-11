@@ -14,6 +14,23 @@ def atoms_description(atoms, print_flag=False):
         plot_atoms(atoms, ax[2], radii=0.3)
         plt.show()
     return None
+def plot_with_positions(atoms, position_dict, color_dict):
+    # Plot the atoms using ASE's plot_atoms function
+    fig, ax = plt.subplots()
+    plot_atoms(atoms, ax=ax, rotation=('0x,0y,0z'))
+    offset = [1.7, 0] # the bottom left corner of the cell is not drawn in (0,0)
+    
+    # Iterate through the position_dict to draw crosses and legends
+    for label, position in position_dict.items():
+        # Draw a cross at the specified position
+        color = color_dict.get(label, 'black')  # Default color is black if not specified
+        ax.scatter(position[0]+offset[0], position[1]+offset[0], color=color, label=label, s=100, marker='x', linewidths=2)
+    
+    # Add a legend outside of the plot
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.show()
+    
 
 def center_atoms(atoms, final_height=None):
     '''Translates the geometrical center of the molecule to the center of the cell.'
