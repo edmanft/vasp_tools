@@ -15,6 +15,7 @@ def plot_with_positions(atoms, position_dict, color_dict, offset=None):
     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     
     plt.show()
+
     
 
 def atoms_description(atoms, print_flag=False):
