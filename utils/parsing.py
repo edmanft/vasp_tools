@@ -11,7 +11,7 @@ import json
 from ase import Atoms
 import pubchempy as pcp
 
-def extract_sites(file_path):
+def extract_sites(file_path, exclude_commented=True):
     sites_dict = {}
     with open(file_path, 'r') as file:
         lines = file.readlines()
@@ -23,16 +23,17 @@ def extract_sites(file_path):
             in_sites_section = True
             continue
         if line.startswith("&") and in_sites_section:
-            # End of the &SITES section
             break
         if in_sites_section:
-            if line:  # Make sure the line is not empty
+            if line and (not exclude_commented or not line.startswith('#')):
                 parts = line.split()
                 site_name = parts[0]
-                coordinates = np.array([float(coord) for coord in parts[1:]])
-                sites_dict[site_name] = coordinates
+                if not site_name.startswith('#'):
+                    coordinates = np.array([float(coord) for coord in parts[1:]])
+                    sites_dict[site_name] = coordinates
                 
     return sites_dict
+    
     def parse_dft_to_dataframe(file_path):
     """
     Parse the DFT calculation results from the given file into a pandas DataFrame.
