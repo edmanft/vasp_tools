@@ -45,7 +45,44 @@ def parse_sites_from_file_path(file_path):
         print(f"File not found: {file_path}")
 
     return sites_dict
+    def parse_dft_to_dataframe(file_path):
+    """
+    Parse the DFT calculation results from the given file into a pandas DataFrame.
+    
+    Args:
+    - file_path (str): Path to the file containing the DFT calculation results.
+    
+    Returns:
+    - pandas.DataFrame: A DataFrame with 'z' as index and site names as columns.
+    """
+    # Dictionary to hold our data, with sites as keys and lists of tuples as values
+    data = {}
 
+    with open(file_path, 'r') as file:
+        for line in file:
+            # New site calculation
+            if line.startswith("Calculating site..."):
+                current_site = line.strip().split("... ")[1]
+                if current_site not in data:
+                    data[current_site] = []
+            elif "eV" in line:
+                z, energy = line.strip().split("\t")
+                data[current_site].append((float(z), float(energy.split(" ")[0])))
+                
+    # Convert to DataFrame
+    # First, transform data to a format suitable for DataFrame construction
+    df_data = {}
+    for site, values in data.items():
+        for z, energy in values:
+            if z not in df_data:
+                df_data[z] = {}
+            df_data[z][site] = energy
+            
+    # Create DataFrame
+    df = pd.DataFrame.from_dict(df_data, orient='index').sort_index()
+    df = df.rename_axis('z').reset_index()
+    
+    return df
 
 def parse_pubchem_json(path):
     """Helper function for parsing the Pubchem Conformer JSON of the molecule to
