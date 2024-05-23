@@ -11,39 +11,27 @@ import json
 from ase import Atoms
 import pubchempy as pcp
 
-def parse_sites_from_file_path(file_path):
-    # Dictionary to store the sites and their positions
+def extract_sites(file_path):
     sites_dict = {}
-
-    try:
-        with open(file_path, 'r') as file:
-            # Flag to indicate if we are in the SITES section
-            in_sites_section = False
-
-            for line in file:
-                # Check if we have reached the SITES section
-                if '&SITES' in line:
-                    in_sites_section = True
-                    continue
-
-                # Check if we have left the SITES section
-                if in_sites_section and line.startswith('&'):
-                    break
-
-                # Process the line if we are in the SITES section
-                if in_sites_section and line.strip():
-                    parts = line.split()
-                    if len(parts) == 3:
-                        try:
-                            # Parse the positions as floats and store them in the dictionary
-                            sites_dict[parts[0]] = (float(parts[1]), float(parts[2]))
-                        except ValueError:
-                            # Handle the case where the conversion to float fails
-                            print(f"Error parsing line: {line}")
-
-    except FileNotFoundError:
-        print(f"File not found: {file_path}")
-
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+        
+    in_sites_section = False
+    for line in lines:
+        line = line.strip()
+        if line == "&SITES":
+            in_sites_section = True
+            continue
+        if line.startswith("&") and in_sites_section:
+            # End of the &SITES section
+            break
+        if in_sites_section:
+            if line:  # Make sure the line is not empty
+                parts = line.split()
+                site_name = parts[0]
+                coordinates = np.array([float(coord) for coord in parts[1:]])
+                sites_dict[site_name] = coordinates
+                
     return sites_dict
     def parse_dft_to_dataframe(file_path):
     """
