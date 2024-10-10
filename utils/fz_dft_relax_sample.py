@@ -1,3 +1,4 @@
+import re
 import argparse
 import os
 import sys
@@ -8,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import ase
 from ase.io import write, read
+
 
 
 def parse_arguments():
@@ -28,7 +30,7 @@ def parse_arguments():
     parser.add_argument('--zf', required=True, type=float, help='Finishing height.')
     parser.add_argument('--dz', required=True, type=float, help='Step height.')
     parser.add_argument('--vasp_instruct', required=True, type=str, help='Path to file with commands to execute VASP and postprocessing.')
-
+    parser.add_argument('--restart', action='store_true', help='Restart a calculation from an intermediate position.')
     args = parser.parse_args()
     
     # Check that dz is positive
@@ -41,7 +43,6 @@ def parse_arguments():
     args.incar = os.path.abspath(args.incar)
     args.kpoints = os.path.abspath(args.kpoints)
     args.potcar = os.path.abspath(args.potcar)
-    args.label = os.path.abspath(args.label)
     args.sample_poscar = os.path.abspath(args.sample_poscar)
     args.tip_poscar = os.path.abspath(args.tip_poscar)
     args.vasp_instruct = os.path.abspath(args.vasp_instruct)
@@ -55,8 +56,13 @@ def create_calculation_folders(args):
         os.makedirs(args.label)
     
     args_dict = vars(args)
-    with open(os.path.join(args.label, 'metadata.json'), 'w') as f:
-        json.dump(args_dict, f, indent=4)
+    if args.restart:
+        with open(os.path.join(args.label, 'metadata_restart.json'), 'w') as f:
+            json.dump(args_dict, f, indent=4)
+    
+    else:
+        with open(os.path.join(args.label, 'metadata.json'), 'w') as f:
+            json.dump(args_dict, f, indent=4)
     
     # Create all the calculation folders and copy the INCAR, POTCAR, KPOINTS and execute_relaxation_sh 
 
@@ -112,6 +118,23 @@ def remove_slashes_from_files(directory):
         if filepath.exists():
             subprocess.run(f"sed -i '6s|/||g' {filepath}", shell=True)
 
+def check_calculation_success(calc_dir):
+    """
+    Checks if the VASP calculation in the specified directory was successful by searching for a specific
+    pattern in the OUTCAR file using regular expressions.
+    """
+    success_pattern = re.compile(r"reached required accuracy - stopping structural energy minimisation")
+    try:
+        with open(f"{calc_dir}/OUTCAR", "r") as file:
+            content = file.read()
+            if re.search(success_pattern, content):
+                return True
+    except FileNotFoundError:
+        print(f"OUTCAR file not found in {calc_dir}")
+    except Exception as e:
+        print(f"Error reading from {calc_dir}/OUTCAR: {e}")
+    return False
+
 
 def main():
     args = parse_arguments()
@@ -153,7 +176,10 @@ def main():
     
 
     calc_dir, prev_calc_dir = None, None
-    
+    if args.restart: 
+        prev_calc_dir = os.path.join(args.label,f"{z0-dz*sign_dz:.2f}")
+        print(f"Restarting calculation from {prev_calc_dir}")
+
     for z in zrange:
         calc_dir = os.path.join(args.label,f"{z:.2f}")
 
@@ -187,9 +213,23 @@ def main():
             
             write(os.path.join(calc_dir, "POSCAR"), system, direct=False)
 
+            retry_count = 0
+            max_retries = 3 # Maximum number of calculations we try
 
-            os.chdir(calc_dir)
-            os.system('./execute_relaxation_sh' )
+            while retry_count < max_retries:
+                os.chdir(calc_dir)
+                os.system('./execute_relaxation_sh')
+
+                if check_calculation_success(calc_dir):
+                    print(f"Calculation at {calc_dir} successful.")
+                    break
+                else:
+                    print(f"Calculation at {calc_dir} failed.")
+                    retry_count += 1
+
+            if retry_count == max_retries:
+                print("Maximum retries reached. Exiting job.")
+                sys.exit()
             
             remove_slashes_from_files(calc_dir)   
               
@@ -197,24 +237,6 @@ def main():
         prev_calc_dir = calc_dir
 
 
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-   
 
 
 if __name__ == "__main__":
