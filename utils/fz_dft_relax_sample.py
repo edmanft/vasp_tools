@@ -105,9 +105,12 @@ def prepare_sample_tip(args):
         print("Defaulting to static tip")
         tip_constraint = ase.constraints.FixAtoms([atom.index for atom in tip])
         tip.set_constraint(tip_constraint)
-    tip.cell = sample.cell
+    
+    if not np.array_equal(tip.cell, sample.cell):
+        raise ValueError("The cell parameters of the tip and sample do not match. Aborting execution.")
     
     return sample, tip
+
 def remove_slashes_from_files(directory):
     # List of files to check and modify
     files_to_check = ['CONTCAR', 'CHGCAR', 'LOCPOT']
