@@ -105,12 +105,9 @@ def prepare_sample_tip(args):
         print("Defaulting to static tip")
         tip_constraint = ase.constraints.FixAtoms([atom.index for atom in tip])
         tip.set_constraint(tip_constraint)
-    
-    if not np.array_equal(tip.cell, sample.cell):
-        raise ValueError("The cell parameters of the tip and sample do not match. Aborting execution.")
+    tip.cell = sample.cell
     
     return sample, tip
-
 def remove_slashes_from_files(directory):
     # List of files to check and modify
     files_to_check = ['CONTCAR', 'CHGCAR', 'LOCPOT']
@@ -126,7 +123,7 @@ def check_calculation_success(calc_dir):
     Checks if the VASP calculation in the specified directory was successful by searching for a specific
     pattern in the OUTCAR file using regular expressions.
     """
-    success_pattern = re.compile(r"reached required accuracy - stopping structural energy minimisation")
+    success_pattern = re.compile(r"aborting loop because EDIFF is reached")
     try:
         with open(f"{calc_dir}/OUTCAR", "r") as file:
             content = file.read()
